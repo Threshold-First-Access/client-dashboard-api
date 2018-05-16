@@ -1,0 +1,32 @@
+[glob]
+.DS_Store
+
+# IDE files
+.idea
+.vscode
+
+# Env file settings local to the developer
+.env
+
+# Test artifacts
+coverage
+jest
+test-report.xml
+
+**/junit.xml
+reports/
+
+# Yarn files to ignore
+yarn-error.log
+
+# NPM is not used, use yarn instead
+package-lock.json
+
+# NPM artifacts
+node_modules
+.npm-debug.log
+npm-debug.log
+
+# General files
+out.log
+requests.log

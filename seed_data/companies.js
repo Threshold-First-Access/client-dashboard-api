@@ -1,0 +1,33 @@
+module.exports = [
+  {
+    id: 1,
+    name: 'Finca',
+    slug: 'finca',
+    country: 'KE',
+    country_name: 'Kenya',
+    timezone: 'UTC+03:00',
+    currency: 'KSh',
+    language: 'en',
+    test_mode_enabled: true,
+  },
+  {
+    id: 2,
+    name: 'Finca Tz',
+    slug: 'finca-tz',
+    country: 'TZ',
+    country_name: 'Tanzania',
+    timezone: 'UTC+03:00',
+    currency: 'TZS',
+    language: 'sw',
+  },
+  {
+    id: 3,
+    name: 'Finca Ug',
+    slug: 'finca-ug',
+    country: 'UG',
+    country_name: 'Uganda',
+    timezone: 'UTC+03:00',
+    currency: 'UGX',
+    language: 'en',
+  },
+];

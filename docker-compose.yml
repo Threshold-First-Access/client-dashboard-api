@@ -1,0 +1,25 @@
+version: '3'
+services:
+  dogstatsd:
+    container_name: dogstatsd
+    image: datadog/docker-dd-agent:latest-dogstatsd
+    ports:
+      - "8125:8125/udp"
+    environment:
+      API_KEY: ${DATADOG_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL}
+  db:
+    container_name: mysql
+    image: mysql:latest
+    ports:
+      - "${DATABASE_PORT}:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+  cache:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "${REDIS_PORT}:6379"

@@ -1,0 +1,278 @@
+version: 2
+definitions:
+  save_sha: &save_sha
+    run:
+      name: Save cache key SHA to file
+      command: |
+        if [ "$CIRCLE_TAG" = "latest" ]; then
+          echo "$CIRCLE_SHA1-$CIRCLE_TAG" > .circle-sha
+        else
+          echo "$CIRCLE_SHA1-$CIRCLE_BRANCH" > .circle-sha
+        fi
+  build_defaults: &build_defaults
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.9.3
+  deployment_defaults: &deployment_defaults
+    working_directory: ~/app
+    docker:
+      - image: firstaccess/python-build-env-circleci
+  configure_aws: &configure_aws
+    run:
+      name: Configure the environment for this build.
+      command: |
+        if [ "$CIRCLE_TAG" = "latest" ]; then
+          echo "production" > ~/.workspace_env
+        elif [ "$CIRCLE_BRANCH" = "master" ]; then
+          echo "staging" > ~/.workspace_env
+        elif [ "$CIRCLE_BRANCH" = "develop" ]; then
+          echo "dev" > ~/.workspace_env
+        else
+          echo "No need to configure AWS credentials - not on master or develop!"
+          exit 1
+        fi;
+
+        export ENV=$(cat ~/.workspace_env)
+        echo "Fetching $ENV credentials...."
+        vault write -format=json aws/$ENV/sts/deploy -ttl=600s > .vault_aws
+
+        if [ -f .vault_aws ]; then
+          echo "Credentials found. Configuring AWS for $ENV..."
+          aws configure --profile=$ENV set aws_access_key_id $(jq -r ".data.access_key" .vault_aws)
+          aws configure --profile=$ENV set aws_secret_access_key $(jq -r ".data.secret_key" .vault_aws)
+          aws configure --profile=$ENV set aws_session_token $(jq -r ".data.security_token" .vault_aws)
+          aws configure --profile=$ENV set aws_region us-east-1
+          aws configure set profile $ENV
+        else
+          echo "Could not find a .vault_aws file - not on master or develop!"
+          exit 0
+        fi;
+  tf_init: &tf_init
+    run:
+      name: Terraform Init
+      working_directory: ~/app/terraform
+      command: |
+        if [ -f  ~/.workspace_env ]; then
+          echo "Using AWS profile $(aws configure get profile)"
+          make init
+        else
+          echo "No environment set (~/.workspace_env missing). This should never happen."
+          exit 1
+        fi
+jobs:
+  checkout_code:
+    <<: *build_defaults
+    steps:
+      - checkout
+      - <<: *save_sha
+      - save_cache:
+          key: client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+          paths:
+            - ~/app
+  bundle_dependencies:
+    <<: *build_defaults
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+      - run: yarn --cache-folder ~/.cache/yarn
+      - save_cache:
+          key: v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/app/node_modules
+  lint:
+    <<: *build_defaults
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+      - run:
+          name: Run Linter
+          command: yarn lint
+  test:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.9.3
+        environment:
+            NODE_ENV: test
+            SECRET_KEY: This is a secret
+      - image: redis
+      - image: mysql:5.7
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: true
+            MYSQL_DATABASE: circle_test
+            TEST_REPORT_PATH: reports
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+      - run:
+          name: Wait for MySQL Environemnt
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+      - run:
+          name: Run Tests
+          command: yarn test
+      - store_artifacts:
+          path: coverage/lcov-report
+          prefix: coverage
+      - store_test_results:
+          path: reports/test-report.xml
+  build_docker_image:
+    <<: *deployment_defaults
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+      - setup_remote_docker
+      - run:
+          name: Build Docker container
+          command: |
+            docker build --build-arg NPM_TOKEN=$NPM_TOKEN -t client-dashboard-api .
+  build_and_push:
+    <<: *deployment_defaults
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - client-dashboard-api-repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - v1-client-dashboard-api-yarn-deps-{{ checksum "yarn.lock" }}
+      - <<: *configure_aws
+      - setup_remote_docker
+      - run:
+          name: Build Docker container
+          command: |
+            docker build --build-arg NPM_TOKEN=$NPM_TOKEN -t client-dashboard-api .
+      - run:
+          name: Push Docker image to remote repo
+          command: |
+            export ENV=$(cat ~/.workspace_env)
+            eval $(aws ecr get-login --profile $ENV --region us-east-1 --no-include-email)
+            export ECR_REPO=$(vault read -field=ecr_repository_url settings/$ENV/application/client-dashboard-api/aws)
+            docker tag client-dashboard-api:latest $ECR_REPO:latest
+            docker push $ECR_REPO:latest
+            vault write settings/$ENV/application/client-dashboard-api/builds tag=latest build=$CIRCLE_BUILD_NUM
+  plan:
+    <<: *deployment_defaults
+    steps:
+      - <<: *save_sha
+      - <<: *configure_aws
+      - run:
+          name: Clone Terraform Repo
+          command: |
+            mkdir -p ~/.ssh
+            touch ~/.ssh/known_hosts
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            export BRANCH_OR_TAG=$([[ ! -z "$CIRCLE_TAG" ]] && echo $CIRCLE_TAG || echo $CIRCLE_BRANCH)
+            git clone -b $BRANCH_OR_TAG git@github.com:firstaccess/terraform-aws-client-dashboard-api.git terraform
+      - <<: *tf_init
+      - run:
+          name: Terraform Plan
+          working_directory: ~/app/terraform
+          command: |
+              make plan
+      - save_cache:
+          key: service-client-dashboard-api-codebase-{{ checksum ".circle-sha" }}
+          paths: ~/app/terraform
+  deploy:
+    <<: *deployment_defaults
+    steps:
+      - <<: *save_sha
+      - restore_cache:
+          keys:
+            - service-client-dashboard-api-codebase-{{ checksum ".circle-sha" }}
+      - <<: *configure_aws
+      - <<: *tf_init
+      - run:
+          name: Terraform Apply
+          working_directory: ~/app/terraform
+          command: |
+              make apply
+workflows:
+  version: 2
+  build_test_and_deploy:
+    jobs:
+      - checkout_code:
+          filters:
+            tags:
+              only: latest
+      - bundle_dependencies:
+          requires:
+            - checkout_code
+          filters:
+            tags:
+              only: latest
+      - lint:
+          requires:
+            - bundle_dependencies
+          filters:
+            tags:
+              only: latest
+      - test:
+          requires:
+            - bundle_dependencies
+          filters:
+            tags:
+              only: latest
+      - build_docker_image:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              ignore: [develop, master]
+      - build_and_push:
+          context: org-global
+          filters:
+            tags:
+              only: latest
+            branches:
+              only: [develop, master]
+          requires:
+            - test
+            - lint
+      - plan:
+          context: org-global
+          requires:
+            - build_and_push
+          filters:
+            tags:
+              only: latest
+            branches:
+              only: [develop, master]
+      - deployment_hold:
+          type: approval
+          requires:
+            - plan
+          filters:
+            tags:
+              only: latest
+            branches:
+              only: [master]
+      - deploy:
+          context: org-global
+          requires:
+            - deployment_hold
+            - plan
+          filters:
+            tags:
+              only: latest
+            branches:
+              only: [develop, master]

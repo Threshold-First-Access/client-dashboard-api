@@ -1,0 +1,281 @@
+---
+permissions:
+  - name: Get companies
+    permission: CAN_GET_COMPANIES
+    scope: application
+    category: company
+  - name: Create company
+    permission: CAN_CREATE_COMPANY
+    scope: application
+    category: company
+  - name: Edit company information
+    permission: CAN_UPDATE_COMPANY
+    scope: application
+    category: company
+  - name: Edit company information
+    permission: CAN_UPDATE_COMPANY
+    scope: company
+    category: company
+  - name: Delete Company
+    permission: CAN_DELETE_COMPANY
+    category: company
+    scope: application
+
+  - name: View all users
+    permission: CAN_GET_USERS
+    scope: company
+    category: user
+  - name: Get users
+    permission: CAN_GET_USERS
+    scope: application
+    category: user
+  - name: Create new user
+    permission: CAN_ADD_USER
+    scope: application
+    category: user
+  - name: Invite new users
+    permission: CAN_ADD_USER
+    scope: company
+    category: user
+  - name: Update user
+    permission: CAN_UPDATE_USER
+    scope: application
+    category: user
+  - name: Edit user information
+    permission: CAN_UPDATE_USER
+    scope: company
+    category: user
+
+  - name: Get roles
+    permission: CAN_GET_ROLES
+    scope: application
+    category: role
+  - name: View all roles
+    permission: CAN_GET_ROLES
+    scope: company
+    category: role
+  - name: Create role
+    permission: CAN_CREATE_ROLE
+    scope: application
+    category: role
+  - name: Create new roles
+    permission: CAN_CREATE_ROLE
+    scope: company
+    category: role
+  - name: Add users to roles
+    permission: CAN_ADD_USER_TO_ROLE
+    scope: application
+    category: role
+  - name: Add users to roles
+    permission: CAN_ADD_USER_TO_ROLE
+    scope: company
+    category: role
+  - name: Manage role permissions
+    permission: CAN_ADD_PERMISSION_TO_ROLE
+    scope: application
+    category: role
+  - name: Manage role permissions
+    permission: CAN_ADD_PERMISSION_TO_ROLE
+    scope: company
+    category: role
+  - name: Delete roles
+    permission: CAN_DELETE_ROLE
+    scope: application
+    category: role
+  - name: Delete roles
+    permission: CAN_DELETE_ROLE
+    scope: company
+    category: role
+
+  - name: View all branches
+    permission: CAN_GET_COMPANY_BRANCHES
+    scope: application
+    category: branch
+  - name: View all branches
+    permission: CAN_GET_COMPANY_BRANCHES
+    scope: company
+    category: branch
+  - name: Create new branches
+    permission: CAN_CREATE_COMPANY_BRANCH
+    scope: application
+    category: branch
+  - name: Edit branch information
+    permission: CAN_UPDATE_COMPANY_BRANCH
+    scope: application
+    category: branch
+  - name: Delete branches
+    permission: CAN_DELETE_COMPANY_BRANCH
+    scope: application
+    category: branch
+  - name: Create new branches
+    permission: CAN_CREATE_COMPANY_BRANCH
+    scope: company
+    category: branch
+  - name: Edit branch information
+    permission: CAN_UPDATE_COMPANY_BRANCH
+    scope: company
+    category: branch
+  - name: Delete branches
+    permission: CAN_DELETE_COMPANY_BRANCH
+    scope: company
+    category: branch
+
+  - name: View all products
+    permission: CAN_GET_COMPANY_PRODUCTS
+    scope: company
+    category: product
+  - name: View all products
+    permission: CAN_GET_COMPANY_PRODUCTS
+    scope: application
+    category: product
+  - name: Create company product
+    permission: CAN_CREATE_COMPANY_PRODUCT
+    scope: application
+    category: product
+  - name: Update company product
+    permission: CAN_UPDATE_COMPANY_PRODUCT
+    scope: application
+    category: product
+  - name: Delete company product
+    permission: CAN_DELETE_COMPANY_PRODUCT
+    scope: application
+    category: product
+
+  - name: Get product workflows
+    permission: CAN_GET_PRODUCT_WORKFLOWS
+    scope: application
+    category: workflow
+  - name: Create product workflow
+    permission: CAN_CREATE_PRODUCT_WORKFLOW
+    scope: application
+    category: workflow
+  - name: Update a product workflow
+    permission: CAN_UPDATE_PRODUCT_WORKFLOW
+    scope: application
+    category: workflow
+  - name: Delete a product workflow
+    permission: CAN_DELETE_PRODUCT_WORKFLOW
+    scope: application
+    category: workflow
+
+  - name: Get a workflow contract
+    permission: CAN_GET_WORKFLOW_CONTRACT
+    scope: application
+    category: configuration
+  - name: Get a workflow configuration
+    permission: CAN_GET_WORKFLOW_CONFIGURATION
+    scope: application
+    category: configuration
+  - name: Update a workflow configuration
+    permission: CAN_UPDATE_WORKFLOW_CONFIGURATION
+    scope: application
+    category: configuration
+  - name: Update a workflow contract
+    permission: CAN_UPDATE_WORKFLOW_CONTRACT
+    scope: application
+    category: configuration
+  - name: Update a workflow's analysis schema
+    permission: CAN_UPDATE_WORKFLOW_ANALYSIS_SCHEMA
+    scope: application
+    category: configuration
+  - name: Get a workflow's analysis schema
+    permission: CAN_GET_WORKFLOW_ANALYSIS_SCHEMA
+    scope: application
+    category: configuration
+
+  - name: View appraisals
+    permission: CAN_GET_APPLICATIONS
+    scope: application
+    category: appraisal
+  - name: View all appraisals in the company
+    permission: CAN_GET_APPLICATIONS
+    scope: company
+    category: appraisal
+  - name: View all appraisals in the same branch
+    permission: CAN_GET_APPLICATIONS
+    scope: branch
+    category: appraisal
+  - name: Create an appraisal
+    permission: CAN_CREATE_APPLICATION
+    scope: company
+    category: appraisal
+  - name: Add notes to an appraisal
+    permission: CAN_ADD_APPLICATION_NOTE
+    scope: company
+    category: appraisal
+  - name: Submit appraisals
+    permission: CAN_SUBMIT_APPLICATION
+    scope: company
+    category: appraisal
+  - name: Add appraisal decisions
+    permission: CAN_ADD_APPLICATION_DECISION
+    scope: company
+    category: appraisal
+  - name: Delete appraisals
+    permission: CAN_DELETE_APPLICATION
+    scope: company
+    category: appraisal
+
+  - name: View Appraisal Eligibility status
+    permission: CAN_VIEW_ELIGIBILITY_STATUS
+    scope: company
+    category: appraisal
+
+  - name: View Appraisal output
+    permission: CAN_VIEW_OUTPUTS
+    scope: company
+    category: appraisal
+
+  - name: Re-open appraisal
+    permission: CAN_REOPEN_APPRAISAL
+    scope: company
+    category: appraisal
+
+  - name: View appraisal timeline
+    permission: CAN_VIEW_APPRAISAL_TIMELINE
+    scope: company
+    category: appraisal
+
+  - name: Get logs
+    permission: CAN_GET_LOGS
+    scope: application
+    category: audit logs
+
+  - name: View company reports
+    permission: CAN_GET_REPORTS
+    scope: company
+    category: reports
+
+  - name: Create personal access tokens
+    permission: CAN_CREATE_PERSONAL_ACCESS_TOKENS
+    scope: application
+    category: developer
+  - name: Create personal access tokens
+    permission: CAN_CREATE_PERSONAL_ACCESS_TOKENS
+    scope: company
+    category: developer
+
+  - name: Create API client apps
+    permission: CAN_CREATE_API_CLIENT_APP
+    scope: company
+    category: developer
+  - name: Create API client apps
+    permission: CAN_CREATE_API_CLIENT_APP
+    scope: application
+    category: developer
+  - name: Get API client apps
+    permission: CAN_GET_API_CLIENT_APPS
+    scope: company
+    category: developer
+  - name: Get API client apps
+    permission: CAN_GET_API_CLIENT_APPS
+    scope: application
+    category: developer
+  - name: Delete API client app
+    permission: CAN_DELETE_API_CLIENT_APP
+    scope: company
+    category: developer
+  - name: Delete API client app
+    permission: CAN_DELETE_API_CLIENT_APP
+    scope: application
+    category: developer

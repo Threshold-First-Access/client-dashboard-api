@@ -1,0 +1,7 @@
+.circle*
+.git*
+.vaault_aws
+node_modules
+npm-debug.log
+test
+coverage

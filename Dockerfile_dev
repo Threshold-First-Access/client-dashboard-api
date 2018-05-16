@@ -1,0 +1,31 @@
+# Use the predefined node base image for this module.
+FROM node:8.9.3
+
+# create the log directory
+RUN mkdir -p /var/log/applications/client_dashboard_api
+
+# Create base "src" directory where the source repo will reside in our container.
+# Code is copied from the host machine to this "src" folder in the container as a last step.
+RUN mkdir /src
+WORKDIR /src
+
+# Install node dependencies
+COPY ./bin/provision_dev.sh /provision_dev.sh
+RUN chmod 755 /provision_dev.sh
+ENTRYPOINT ["/provision_dev.sh"]
+
+# For development environment, we want to use nodemon to keep the code running
+COPY package*.json yarn.lock ./
+RUN yarn
+
+# Copy service to src directory
+COPY . /src
+
+# Map a volume for the log files and add a volume to override the code
+VOLUME ["/src", "/var/log/applications/client_dashboard_api"]
+
+# Expose port for api
+EXPOSE  8080
+
+# Start application
+CMD ["npm", "run", "start_dev"]
